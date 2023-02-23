@@ -1,0 +1,35 @@
+<html>
+<head>
+    <title>猜数字游戏</title>
+</head>
+<body>
+    <h1>猜数字游戏</h1>
+    <script>
+        // 生成一个1-100之间的随机数
+        let number = Math.floor(Math.random() * 100) + 1;
+        // 用户猜测的次数
+        let guess_times = 0;
+        // 用户猜测的数字
+        let guess_number;
+        // 游戏结果
+        let result;
+        function guess() {
+            guess_times++;
+            guess_number = document.getElementById("guess_number").value;
+            if (guess_number > number) {
+                result = "你猜的数字大了！";
+            } else if (guess_number < number) {
+                result = "你猜的数字小了！";
+            } else {
+                result = "恭喜你猜对了！";
+            }
+            document.getElementById("result").innerHTML = result;
+            document.getElementById("guess_times").innerHTML = guess_times;
+        }
+    </script>
+    <p>请输入你猜的数字：<input type="text" id="guess_number" /></p>
+    <p><input type="button" value="猜数字" onclick="guess()" /></p>
+    <p>结果：<span id="result"></span></p>
+    <p>你一共猜了<span id="guess_times">0</span>次</p>
+</body>
+</html>
