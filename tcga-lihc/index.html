@@ -1,45 +1,49 @@
 <!doctype html>
-<html lang="zh-Hant">
+<html lang="zh-CN">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="從資料檢查、配對 DESeq2 到 GO、KEGG 與 GSEA，逐步探索 TCGA LIHC 真實轉錄組分析結果，並對照 R 程式。">
-  <meta name="theme-color" content="#132d46">
-  <title>TCGA LIHC 逐步分析</title>
-  <link rel="stylesheet" href="styles.css">
-  <script defer src="app-data.js"></script>
-  <script defer src="app.js"></script>
+  <meta name="description" content="TCGA–LIHC 配对转录组分析。逐步查看数据检查、DESeq2、GO、KEGG 和 GSEA 的实际结果与 R 代码。">
+  <meta name="theme-color" content="#f6f5f1">
+  <title>TCGA–LIHC · 配对转录组分析</title>
+  <link rel="stylesheet" href="styles.css?v=2">
+  <script defer src="app-data.js?v=2"></script>
+  <script defer src="copy-zh-cn.js?v=2"></script>
+  <script defer src="app.js?v=2"></script>
 </head>
 <body>
-  <a class="skip" href="#main">跳至分析內容</a>
+  <a class="skip" href="#main">跳到正文</a>
   <header class="masthead">
-    <a class="brand" href="#overview"><strong>TCGA LIHC</strong><span>逐步分析</span></a>
-    <div class="masthead-context">配對轉錄組分析<span class="context-divider"></span><span class="desktop-detail">從結果理解方法</span></div>
-    <div class="header-actions"><a class="download-link" href="TCGA_LIHC_analysis.R" download>下載完整 R</a><button class="code-toggle" id="code-toggle" aria-controls="code-panel" aria-expanded="true">R 程式</button></div>
+    <a class="brand" href="#overview" aria-label="TCGA LIHC 研究概览"><span class="brand-symbol" aria-hidden="true">Li</span><span class="brand-word"><strong>TCGA <i>/</i> LIHC</strong><small>配对转录组分析</small></span></a>
+    <nav class="header-nav" aria-label="快捷导航"><a href="#overview">研究概览</a><a href="#differential">探索结果</a><a href="#interpretation">分析结论</a></nav>
+    <div class="header-actions"><a class="download-link" href="TCGA_LIHC_analysis.R" download><span aria-hidden="true">↓</span> 下载 R 文件</a><button class="code-toggle" id="code-toggle" aria-controls="code-panel" aria-expanded="false"><span class="code-symbol" aria-hidden="true">&lt;/&gt;</span> 对照 R 代码</button></div>
   </header>
-  <div class="workspace" id="workspace">
+  <div class="workspace codes-hidden" id="workspace">
     <aside class="journey">
-      <div class="journey-heading"><span>分析步驟</span><span id="step-count">1 / 9</span></div>
-      <nav aria-label="分析階段" id="step-nav"></nav>
-      <div class="journey-bottom"><p>原始 count 建模<br>GroupX 相對 GroupY</p><div class="group-key"><span class="key-x">GroupX</span><span class="key-y">GroupY</span></div><p class="keyboard-note"><kbd>←</kbd> <kbd>→</kbd> 切換步驟</p></div>
+      <div class="journey-heading"><span>分析目录</span><span id="step-count">1 / 9</span></div>
+      <div class="journey-progress" aria-hidden="true"><i id="journey-progress"></i></div>
+      <nav aria-label="分析步骤" id="step-nav"></nav>
+      <div class="journey-bottom"><span class="micro-label">比较方向</span><p>GroupX <span aria-hidden="true">/</span> GroupY</p><div class="group-key"><span class="key-x">GroupX</span><span class="key-y">GroupY</span></div><div class="keyboard-note"><kbd>←</kbd> <kbd>→</kbd><span>切换步骤</span></div></div>
     </aside>
     <main id="main" tabindex="-1">
-      <div class="step-topline"><span id="step-number">第 01 步</span><span id="step-topic">研究問題</span></div>
-      <article id="step-content" aria-live="polite"><h1>載入分析資料</h1><p>正在讀取已完成的 R 分析結果。</p></article>
-      <div class="step-navigation"><button id="previous" class="button button-secondary">上一個步驟</button><span id="navigation-label"></span><button id="next" class="button">下一個步驟 <span aria-hidden="true">›</span></button></div>
-      <footer class="page-footer">本網站呈現實際 R 分析結果。互動篩選僅供探索，不會在瀏覽器重新執行 DESeq2 或更改正式檢定結果。</footer>
+      <div class="step-topline"><div><span id="step-number">STEP 01</span><span id="step-topic">研究概览</span></div><button class="step-code-link" data-open-code>本步代码 <span aria-hidden="true">↗</span></button></div>
+      <article id="step-content" aria-live="polite"><h1>正在读取分析结果</h1><p>数据加载后，可以逐步查看图表和代码。</p></article>
+      <div class="step-navigation"><button id="previous" class="button button-secondary">上一步</button><span id="navigation-label"></span><button id="next" class="button">下一步 <span aria-hidden="true">→</span></button></div>
+      <footer class="page-footer"><span>TCGA–LIHC · 4 对配对样本</span><p>图表来自已完成的 R 分析。网页中的筛选只调整显示，统计计算由 R 执行。</p></footer>
     </main>
-    <aside class="code-panel" id="code-panel" aria-label="對應 R 程式">
-      <div class="code-heading"><div><span>對照方法</span><h2>這一步的 R 程式</h2></div><button class="code-close" id="code-close" aria-label="關閉 R 程式面板">×</button></div>
-      <div class="code-tabs" role="tablist" aria-label="程式內容"><button id="code-tab" role="tab" aria-selected="true">本步程式</button><button id="run-tab" role="tab" aria-selected="false">如何執行</button></div>
-      <div class="code-tools"><span id="code-source">R</span><button id="copy-code">複製程式</button></div>
+    <div id="code-backdrop" class="code-backdrop" hidden></div>
+    <aside class="code-panel" id="code-panel" role="dialog" aria-modal="true" aria-label="对应的 R 代码" aria-hidden="true">
+      <div class="code-heading"><div><span class="micro-label">方法与结果对照</span><h2 id="code-heading-title">本步 R 代码</h2></div><button class="code-close" id="code-close" aria-label="关闭代码面板">×</button></div>
+      <div class="code-tabs" role="tablist" aria-label="代码内容"><button id="code-tab" role="tab" aria-selected="true">本步代码</button><button id="run-tab" role="tab" aria-selected="false">运行说明</button></div>
+      <div class="code-filebar"><span class="file-mark" aria-hidden="true">R</span><span>TCGA_LIHC_analysis.R</span><span class="file-status">已执行</span></div>
+      <div class="code-tools"><span id="code-source">R</span><button id="copy-code">复制代码</button></div>
       <pre id="code-pre" tabindex="0"><code id="code-text"></code></pre>
-      <div class="code-bottom"><p id="code-note">程式對應正式分析。請下載完整 R 檔，在 R 環境中執行。</p><a href="TCGA_LIHC_analysis.R" download>下載全部分析程式 <span aria-hidden="true">↓</span></a></div>
+      <div class="code-bottom"><p id="code-note">片段行号从 1 开始；上方标注它在完整 R 文件中的位置。</p><a href="TCGA_LIHC_analysis.R" download>下载完整 R 文件 <span aria-hidden="true">↓</span></a></div>
     </aside>
   </div>
   <div id="chart-tooltip" class="tooltip" role="tooltip" hidden></div>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  <dialog id="lightbox" class="lightbox"><div class="lightbox-heading"><h2 id="lightbox-title"></h2><a id="lightbox-pdf" target="_blank" rel="noopener">開啟 PDF</a><button id="close-lightbox" aria-label="關閉圖片">×</button></div><div class="lightbox-image"><img id="lightbox-img" alt=""></div></dialog>
-  <noscript><div class="noscript">請啟用 JavaScript 以使用互動圖表。所有原始圖表和 R 程式亦可直接從網站檔案取得。</div></noscript>
+  <dialog id="lightbox" class="lightbox"><div class="lightbox-heading"><h2 id="lightbox-title"></h2><a id="lightbox-pdf" target="_blank" rel="noopener">打开 PDF ↗</a><button id="close-lightbox" aria-label="关闭图片">×</button></div><div class="lightbox-image"><img id="lightbox-img" alt=""></div></dialog>
+  <noscript><div class="noscript">开启 JavaScript 后可以使用交互图表。R 文件仍可从页面顶部下载。</div></noscript>
 </body>
 </html>
