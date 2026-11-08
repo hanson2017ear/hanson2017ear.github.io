@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="按课程教程的13个步骤查看 TCGA-LIHC 配对差异表达、GO、KEGG 和 GSEA 的实际结果与对应 R 代码。">
+  <meta name="theme-color" content="#f6f5f1">
+  <title>课程作业 · TCGA-LIHC 配对转录组分析</title>
+  <link rel="stylesheet" href="course.css?v=1">
+  <script defer src="data.js?v=1"></script><script defer src="course.js?v=1"></script>
+</head>
+<body>
+  <a class="skip" href="#main">跳到正文</a>
+  <header class="masthead">
+    <a class="brand" href="#overview"><b>TCGA <span>/</span> LIHC</b><small>配对转录组分析</small></a>
+    <nav aria-label="作业栏目"><a class="current" href="./" aria-current="page">课程作业</a><a href="extended.html">扩展作业 <span>↗</span></a></nav>
+    <a class="download" href="downloads/TCGA_LIHC_course.zip" download>下载报告与代码 <span>↓</span></a>
+  </header>
+  <div class="layout">
+    <aside class="rail">
+      <a class="overview-link" href="#overview">作业概览 <span>↗</span></a>
+      <div class="rail-title">分析步骤 <span id="progress-label">0 / 13</span></div>
+      <div class="progress"><i id="progress"></i></div>
+      <nav id="steps" aria-label="13 个分析步骤"></nav>
+      <p class="rail-note">比较方向<br><b>GroupX / GroupY</b><br>正 log2FC · GroupX 较高<br>负 log2FC · GroupY 较高</p>
+    </aside>
+    <main id="main" tabindex="-1">
+      <div class="breadcrumb"><span id="section-label">课程方法 / 分析概览</span><button id="open-code" hidden>查看本步 R 代码 <span>&lt;/&gt;</span></button></div>
+      <article id="content"><h1>TCGA-LIHC 配对转录组分析</h1><p>正在读取课程版结果。</p></article>
+      <div class="step-footer" id="step-footer"><button id="previous">← 上一步</button><span id="step-caption"></span><button id="next">下一步 →</button></div>
+      <footer class="footer"><span>陳萬傑 · 23360036</span><p>图表与数值来自已完成的 R 分析。网页用于查阅结果，检验和 BH 校正由 R 执行。</p><a href="extended.html">扩展作业 ↗</a></footer>
+    </main>
+  </div>
+  <dialog id="code-dialog" aria-labelledby="code-title"><div class="dialog-head"><div><small id="code-source"></small><h2 id="code-title">本步 R 代码</h2></div><button id="close-code" aria-label="关闭代码">×</button></div><div class="code-actions"><span>TCGA_LIHC_分步分析.R</span><button id="copy-code">复制本步代码</button><a href="downloads/TCGA_LIHC_course.R" download>下载完整 R 文件 ↓</a></div><pre id="code-body" tabindex="0"></pre></dialog>
+  <dialog id="figure-dialog" aria-labelledby="figure-title"><div class="dialog-head"><h2 id="figure-title">分析图表</h2><button id="close-figure" aria-label="关闭图表">×</button></div><img id="figure-full" alt=""><a id="figure-pdf" target="_blank" rel="noopener">查看 PDF ↗</a></dialog>
+  <div id="toast" role="status" aria-live="polite"></div>
+  <noscript><p class="no-js">本页需要 JavaScript 才能切换步骤。可直接<a href="downloads/TCGA_LIHC_course.zip">下载报告与 R 代码</a>。</p></noscript>
+</body>
+</html>
