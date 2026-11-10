@@ -1,0 +1,19 @@
+"method","database","ID","Description","direction","BH_adjusted_P","NES","significant"
+"ORA","KEGG","hsa04110","Cell cycle","GroupX",3.67958765958439e-11,NA,TRUE
+"ORA","KEGG","hsa04115","p53 signaling pathway","GroupX",0.00728636261644851,NA,TRUE
+"ORA","KEGG","hsa04218","Cellular senescence","GroupX",0.0130429457704806,NA,TRUE
+"GSEA","KEGG","hsa04110","Cell cycle","GroupX",1.97439012997834e-11,2.51869368613073,TRUE
+"GSEA","GO","GO:0007059","chromosome segregation","GroupX",3.02297423562016e-19,2.44463199756987,TRUE
+"GSEA","GO","GO:0030336","negative regulation of cell migration","GroupY",0.00869095310421613,-1.53426966050583,TRUE
+"GSEA","GO","GO:0002250","adaptive immune response","GroupY",1.1054781546419e-19,-2.32507528755436,TRUE
+"ORA","KEGG","hsa04610","Complement and coagulation cascades","GroupY",5.15880487385749e-09,NA,TRUE
+"ORA","KEGG","hsa04060","Cytokine-cytokine receptor interaction","GroupY",3.28174713494276e-05,NA,TRUE
+"ORA","GO","GO:0019724","B cell mediated immunity","GroupY",1.08039000381897e-14,NA,TRUE
+"GSEA","KEGG","hsa04512","ECM-receptor interaction","GroupX",0.538231086880246,1.04096524749137,FALSE
+"GSEA","KEGG","hsa04510","Focal adhesion","GroupY",0.959753302704732,-0.779905442457414,FALSE
+"GSEA","KEGG","hsa04350","TGF-beta signaling pathway","GroupY",0.0560327320511289,-1.50975896461015,FALSE
+"GSEA","KEGG","hsa01524","Platinum drug resistance","GroupX",0.33134875973529,1.1617263956043,FALSE
+"GSEA","KEGG","hsa01521","EGFR tyrosine kinase inhibitor resistance","GroupY",0.635222325870647,-0.99790986829671,FALSE
+"GSEA","KEGG","hsa01523","Antifolate resistance","GroupY",0.507370407462279,-1.10677420499393,FALSE
+"GSEA","KEGG","hsa00982","Drug metabolism - cytochrome P450","GroupY",1.93144719418126e-09,-2.54847623415505,TRUE
+"ORA","KEGG","hsa00380","Tryptophan metabolism","GroupY",5.15880487385749e-09,NA,TRUE

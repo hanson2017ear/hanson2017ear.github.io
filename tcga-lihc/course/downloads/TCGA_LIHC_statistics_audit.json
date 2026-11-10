@@ -1,0 +1,53 @@
+{
+  "independent_filter": {
+    "input_rows": 15226,
+    "pvalue_NA": 0,
+    "padj_NA": 0,
+    "filterTheta": 0,
+    "filterThreshold": 6.62649958718894,
+    "genes_below_filter": 0,
+    "csv_pvalue_NA": 0,
+    "csv_padj_NA": 0
+  },
+  "ties": {
+    "rank_genes": 15226,
+    "duplicate_excess": 112,
+    "duplicate_excess_percent": 0.735583869696572,
+    "distinct_tied_values": 105,
+    "genes_in_tied_groups": 217,
+    "groups_with_identical_raw_counts": 105,
+    "csv_duplicate_excess": 112,
+    "RDS_DESeq2_duplicate_excess": 112,
+    "ranked_stats_equal_original": true
+  },
+  "ora": [
+    {
+      "name": "GO_Up",
+      "tests": 5712,
+      "zero_hits": 1590,
+      "BH_matches": true,
+      "significant": 136
+    },
+    {
+      "name": "GO_Down",
+      "tests": 5712,
+      "zero_hits": 829,
+      "BH_matches": true,
+      "significant": 328
+    },
+    {
+      "name": "KEGG_Up",
+      "tests": 354,
+      "zero_hits": 57,
+      "BH_matches": true,
+      "significant": 8
+    },
+    {
+      "name": "KEGG_Down",
+      "tests": 354,
+      "zero_hits": 21,
+      "BH_matches": true,
+      "significant": 25
+    }
+  ]
+}

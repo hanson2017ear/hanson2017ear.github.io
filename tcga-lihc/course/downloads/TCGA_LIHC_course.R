@@ -113,6 +113,15 @@ write.csv(DEG[DEG$change == "Down", ], file.path(out_dir, "表格", "GroupY较�
 head(DEG)
 table(DEG$change)
 
+# 核对独立过滤的实际选择；启用 independentFiltering 不保证一定排除基因。
+if_meta <- metadata(res)
+if_audit <- data.frame(genes = nrow(res), pvalue_NA = sum(is.na(res$pvalue)),
+  padj_NA = sum(is.na(res$padj)), filterTheta = if_meta$filterTheta,
+  filterThreshold = unname(if_meta$filterThreshold),
+  genes_below_threshold = sum(res$baseMean < unname(if_meta$filterThreshold)))
+write.csv(if_audit, file.path(out_dir, "表格", "独立过滤与NA核查.csv"), row.names = FALSE)
+
+
 #### 第5步：火山图 ####
 volcano_data <- DEG[is.finite(DEG$log2FoldChange) & is.finite(DEG$padj), ]
 p_volcano <- ggplot(volcano_data, aes(log2FoldChange, -log10(pmax(padj, 1e-300)), color = change)) +
@@ -256,6 +265,23 @@ geneList <- setNames(rank_df$stat, rank_df$ENTREZID)
 stopifnot(all(is.finite(geneList)), !anyDuplicated(names(geneList)), all(diff(geneList) <= 0))
 write.csv(rank_df, file.path(out_dir, "表格", "GSEA全部基因排序.csv"), row.names = FALSE)
 
+# 并列率使用未四舍五入的 Wald 值。112 是每组首个基因之外的重复数，
+# 不是全部并列基因数；保留完整计数模式，以便核查重复的原因。
+tie_groups <- split(seq_len(nrow(rank_df)), match(rank_df$stat, unique(rank_df$stat)))
+tie_groups <- tie_groups[lengths(tie_groups) > 1]
+tie_rows <- do.call(rbind, lapply(seq_along(tie_groups), function(i) {
+  idx <- tie_groups[[i]]; genes <- rank_df$gene[idx]
+  patterns <- apply(counts(dds)[genes, , drop = FALSE], 1, paste, collapse = "/")
+  data.frame(tie_group = i, gene = genes, stat_17_digits = sprintf("%.17g", rank_df$stat[idx]),
+    count_pattern = patterns, all_counts_identical = length(unique(patterns)) == 1)
+}))
+write.csv(tie_rows, file.path(out_dir, "表格", "Wald并列基因与原始count.csv"), row.names = FALSE, fileEncoding = "UTF-8")
+tie_summary <- data.frame(rank_genes = nrow(rank_df), duplicate_excess = sum(duplicated(rank_df$stat)),
+  duplicate_excess_percent = 100 * sum(duplicated(rank_df$stat)) / nrow(rank_df),
+  tied_groups = length(tie_groups), genes_in_tied_groups = sum(lengths(tie_groups)))
+write.csv(tie_summary, file.path(out_dir, "表格", "Wald并列汇总.csv"), row.names = FALSE)
+
+
 # GSEA 使用 ENTREZID，映射后重新排序；固定快照通过 TERM2GENE 传入。
 set.seed(23360036)
 gse_go <- GSEA(geneList = geneList, TERM2GENE = db$go, TERM2NAME = db$go_names,
@@ -272,25 +298,34 @@ write.csv(gse_kegg@result, file.path(out_dir, "表格", "GSEA_KEGG_全部通路.
 write.csv(gse_go@result[gse_go@result$p.adjust < 0.05, ], file.path(out_dir, "表格", "GSEA_GO_显著通路.csv"), row.names = FALSE, fileEncoding = "UTF-8")
 write.csv(gse_kegg@result[gse_kegg@result$p.adjust < 0.05, ], file.path(out_dir, "表格", "GSEA_KEGG_显著通路.csv"), row.names = FALSE, fileEncoding = "UTF-8")
 
-#### 第12步：GSEA 条形图 ####
-df_go <- gse_go@result %>% filter(is.finite(p.adjust), p.adjust < 0.05)
-df_up <- df_go %>% filter(NES > 0) %>% arrange(desc(NES)) %>% head(10) %>% mutate(Group = "Upregulated")
-df_down <- df_go %>% filter(NES < 0) %>% arrange(NES) %>% head(10) %>% mutate(Group = "Downregulated")
-df_plot <- bind_rows(df_up, df_down)
-df_plot$Group <- factor(df_plot$Group, levels = c("Upregulated", "Downregulated"))
-df_plot$label <- vapply(df_plot$Description, function(x) paste(strwrap(x, width = 48), collapse = "\n"), character(1))
-p_gsea <- ggplot(df_plot, aes(reorder(label, NES), NES, fill = Group)) +
-  geom_col(width = 0.7) + coord_flip() +
-  facet_wrap(~ Group, scales = "free_y", ncol = 1) +
-  scale_fill_manual(values = c(Upregulated = "red", Downregulated = "blue")) +
-  theme_bw(base_size = 12) +
-  labs(title = "GSEA Pathways (GroupX vs GroupY)",
-       subtitle = "GO BP | BH-adjusted P < 0.05 | NES > 0: GroupX; NES < 0: GroupY",
-       x = NULL, y = "Normalized Enrichment Score (NES)") +
-  theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 15),
-        strip.text = element_text(face = "bold", size = 13), legend.position = "none",
-        plot.margin = margin(12, 18, 12, 12))
-save_plot(p_gsea, "GSEA pathway", 13, 13)
+#### 第12步：GO BP 和 KEGG 的 GSEA 条形图 ####
+# 显著性标准固定为 BH P<0.05；每个方向按 BH P 升序选前10个，
+# BH P 相同时按 |NES| 降序、ID 升序选择。仅改变展示，不改变检验结果。
+for (database in c("GO", "KEGG")) {
+  all_gsea <- if (database == "GO") gse_go@result else gse_kegg@result
+  df_sig <- all_gsea %>% filter(is.finite(p.adjust), p.adjust < 0.05) %>%
+    arrange(p.adjust, desc(abs(NES)), ID)
+  df_up <- df_sig %>% filter(NES > 0) %>% head(10) %>% mutate(Group = "Upregulated")
+  df_down <- df_sig %>% filter(NES < 0) %>% head(10) %>% mutate(Group = "Downregulated")
+  df_plot <- bind_rows(df_up, df_down)
+  write.csv(df_plot, file.path(out_dir, "表格", paste0("GSEA_", database, "_绘图条目.csv")),
+    row.names = FALSE, na = "NA", fileEncoding = "UTF-8")
+  df_plot$Group <- factor(df_plot$Group, levels = c("Upregulated", "Downregulated"))
+  df_plot$label <- vapply(paste0(df_plot$Description, " (", df_plot$ID, ")"),
+    function(x) paste(strwrap(x, width = 54), collapse = "\n"), character(1))
+  p_gsea <- ggplot(df_plot, aes(reorder(label, NES), NES, fill = Group)) +
+    geom_col(width = 0.7) + coord_flip() +
+    facet_wrap(~ Group, scales = "free_y", ncol = 1) +
+    scale_fill_manual(values = c(Upregulated = "red", Downregulated = "blue")) +
+    theme_bw(base_size = 11) +
+    labs(title = paste(database, "GSEA Pathways (GroupX vs GroupY)"),
+      subtitle = "Top 10 per direction by BH-adjusted P | BH P < 0.05 | NES > 0: GroupX; NES < 0: GroupY",
+      x = NULL, y = "Normalized Enrichment Score (NES)") +
+    theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 15),
+      strip.text = element_text(face = "bold", size = 13), legend.position = "none",
+      plot.margin = margin(12, 18, 12, 12))
+  save_plot(p_gsea, if (database == "GO") "GSEA pathway" else "GSEA KEGG pathway", 14, 13)
+}
 
 #### 第13步：汇总结果并最后核对条码 ####
 # 图表的方向与差异基因表一致；样本类型仅用于最后的独立核对。
@@ -304,6 +339,46 @@ summary_table <- data.frame(analysis = c("DEG_Up", "DEG_Down", names(ora_tables)
     vapply(ora_tables, function(x) sum(x$p.adjust < 0.05), integer(1)),
     sum(gse_go@result$p.adjust < 0.05), sum(gse_kegg@result$p.adjust < 0.05)))
 write.csv(summary_table, file.path(out_dir, "分析汇总.csv"), row.names = FALSE)
+# 正文的结果索引按方法、数据库和 ID 对应原始结果表，不把不显著条目省略。
+report_specs <- list(
+  c("ORA", "KEGG", "Up", "hsa04110"), 
+  c("ORA", "KEGG", "Up", "hsa04115"), 
+  c("ORA", "KEGG", "Up", "hsa04218"), 
+  c("GSEA", "KEGG", "", "hsa04110"), 
+  c("GSEA", "GO", "", "GO:0007059"), 
+  c("GSEA", "GO", "", "GO:0030336"), 
+  c("GSEA", "GO", "", "GO:0002250"), 
+  c("ORA", "KEGG", "Down", "hsa04610"), 
+  c("ORA", "KEGG", "Down", "hsa04060"), 
+  c("ORA", "GO", "Down", "GO:0019724"), 
+  c("GSEA", "KEGG", "", "hsa04512"), 
+  c("GSEA", "KEGG", "", "hsa04510"), 
+  c("GSEA", "KEGG", "", "hsa04350"), 
+  c("GSEA", "KEGG", "", "hsa01524"), 
+  c("GSEA", "KEGG", "", "hsa01521"), 
+  c("GSEA", "KEGG", "", "hsa01523"), 
+  c("GSEA", "KEGG", "", "hsa00982"), 
+  c("ORA", "KEGG", "Down", "hsa00380")
+)
+report_index <- do.call(rbind, lapply(report_specs, function(spec) {
+  if (spec[1] == "ORA") {
+    r <- ora_tables[[paste(spec[2], spec[3], sep = "_")]]
+    r <- r[r$ID == spec[4], , drop = FALSE]
+    direction <- if (spec[3] == "Up") "GroupX" else "GroupY"
+    nes <- NA_real_
+  } else {
+    r <- if (spec[2] == "GO") gse_go@result else gse_kegg@result
+    r <- r[r$ID == spec[4], , drop = FALSE]
+    direction <- if (r$NES > 0) "GroupX" else "GroupY"
+    nes <- r$NES
+  }
+  stopifnot(nrow(r) == 1)
+  data.frame(method = spec[1], database = spec[2], ID = r$ID, Description = r$Description,
+    direction = direction, BH_adjusted_P = r$p.adjust, NES = nes,
+    significant = r$p.adjust < 0.05, stringsAsFactors = FALSE)
+}))
+write.csv(report_index, file.path(out_dir, "表格", "报告通路索引.csv"), row.names = FALSE, na = "NA", fileEncoding = "UTF-8")
+
 saveRDS(list(dds = dds, res = res, DEG = DEG, vsd = vsd, colData = colData,
              ora = ora_tables, gse_go = gse_go, gse_kegg = gse_kegg, rank_df = rank_df),
         file.path(out_dir, "中间对象", "分析对象.rds"), compress = "xz")
